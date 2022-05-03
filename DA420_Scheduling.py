@@ -7,6 +7,8 @@ from __future__ import division, print_function
 import pandas as pd  # data frame operations
 import numpy as np  # arrays and math functions
 import datetime
+
+# conda install -c r rpy2
 # from rpy2.robjects import r  # interface from Python to R
 
 
@@ -20,9 +22,9 @@ import datetime
 
 def erlang_c(c=1, r=0):
 	if c <= 0:
-		return (1)
+		return 1
 	if r <= 0:
-		return (0)
+		return 0
 	c = int(c)
 	tot = 1
 	for i in range(c - 1):
@@ -44,8 +46,7 @@ call_center_data = \
 call_center_data = call_center_data[call_center_data['vru_time'] >= 0]
 
 # calculate wait time as sum of vru_time and q_time
-call_center_data['wait_time'] = call_center_data['vru_time'] + \
-                                call_center_data['q_time']
+call_center_data['wait_time'] = call_center_data['vru_time'] + call_center_data['q_time']
 
 # define date variable with apply and lambda function
 call_center_data['date'] = \
@@ -63,6 +64,7 @@ day_of_week_to_string = {0: 'Monday',
                          4: 'Friday',
                          5: 'Saturday',
                          6: 'Sunday'}
+
 call_center_data['day_of_week'] = \
 	call_center_data['day_of_week'].map(day_of_week_to_string)
 # check structure and contents of the data frame
@@ -81,7 +83,8 @@ call_center_data['call_hour'] = \
 # check frequency of calls in February by hour and day of week
 # note that pandas alphabetizes on output
 print(pd.crosstab(call_center_data['day_of_week'],
-                  call_center_data['call_hour'], margins=False))
+                  call_center_data['call_hour'],
+                  margins=False))
 
 # create an ordered table for Frequency of calls
 table_data = call_center_data.loc[:, ['day_of_week', 'call_hour']]
@@ -92,6 +95,7 @@ day_of_week_to_ordered_day_of_week = {'Monday': '2_Monday',
                                       'Friday': '6_Friday',
                                       'Saturday': '7_Saturday',
                                       'Sunday': '1_Sunday'}
+
 table_data['ordered_day_of_week'] = \
 	table_data['day_of_week'].map(day_of_week_to_ordered_day_of_week)
 print(pd.crosstab(table_data['ordered_day_of_week'], \
@@ -100,7 +104,7 @@ print(pd.crosstab(table_data['ordered_day_of_week'], \
 # select first week of February 1999 for data visualization and analysis
 # that week began on Monday, February 1 and ended on Sunday, February 7
 selected_week = call_center_data[call_center_data['date'] <
-                                 datetime.date(1999, 2, 8)]
+                                 datetime.date(int('1999-02-08'))]
 print(selected_week.head)
 
 # wait-time ribbons were created with R ggplot2 software
@@ -117,16 +121,15 @@ check_hourly_arrival_rate = arrived_for_hour / 4  # four Wednesdays in February 
 print(check_hourly_arrival_rate)
 
 # organize hourly arrival rates according to 24-hour clock
-hourly_arrival_rate = [6.75, 1.75, 1.25, 0.00, 0.50, 0.25, \
-                       4.75, 39.50, 97.25, 107.50, 124.00, 110.25, 95.50, \
-                       203.50, 115.75, 115.50, 67.75, 75.00, 88.75, \
+hourly_arrival_rate = [6.75, 1.75, 1.25, 0.00, 0.50, 0.25,
+                       4.75, 39.50, 97.25, 107.50, 124.00, 110.25, 95.50,
+                       203.50, 115.75, 115.50, 67.75, 75.00, 88.75,
                        85.50, 68.00, 61.50, 57.50, 44.25]
 
 # service times may vary hour-by-hour due to differences
 # in service requests and individuals calling hour-by-hour
 # begin by selecting calls that receive service
-wednesdays_served = wednesdays[wednesdays['server'] != \
-                               'NO_SERVER']
+wednesdays_served = wednesdays[wednesdays['server'] != 'NO_SERVER']
 print(wednesdays_served.head)
 
 hourly_mean_service_time = \
@@ -142,8 +145,7 @@ print(served_for_hour)
 # this 60 seconds is the wrap up time or time an service agent remains
 # unavailable to answer a new call after a call has been completed
 mean_hourly_service_rate = 3600 / (hourly_mean_service_time.mean() + 60)
-print('\nHourly Service Rate for Wednesdays:', \
-      round(mean_hourly_service_rate, 3))
+print('\nHourly Service Rate for Wednesdays:', round(mean_hourly_service_rate, 3))
 
 # use 15 calls per hour as the rate for one service operator
 SERVICE_RATE = 15
@@ -154,18 +156,20 @@ PROBABILITY_GOAL = 0.50
 # Erlang C queueing calculations with Python erlang_c function
 # inputs c = number of servers
 #        r = ratio of rate of arrivals and rate of service
-# returns the propability of waiting in queue because all servers are busy
+# returns the probability of waiting in queue because all servers are busy
 # use while-loop iteration to determine the number of servers needed
 # we do this for each hour of the day knowing the hourly arrival rate
 servers_needed = [0] * 24
 for index_for_hour in range(24):
-	if (hourly_arrival_rate[index_for_hour] > 0):
+	if hourly_arrival_rate[index_for_hour] > 0:
 		erlang_probability = 1  # initialize on entering while-loop
-		while (erlang_probability > PROBABILITY_GOAL):
+		while erlang_probability > PROBABILITY_GOAL:
 			servers_needed[index_for_hour] = servers_needed[index_for_hour] + 1
 			erlang_probability = \
-				erlang_C(c=servers_needed[index_for_hour], \
+				erlang_c(c=servers_needed[index_for_hour],
 				         r=hourly_arrival_rate[index_for_hour] / SERVICE_RATE)
+
+
 print(servers_needed)  # check queueing theory result
 # the result for servers.needed is obtained as
 # 1  1  1  0  1  1  1  4  8  9 10  9  8 16 10 10  6  7  8  8  6  6  5  4
