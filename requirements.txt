@@ -1,0 +1,5 @@
+numpy~=1.21.5
+pandas
+datetime
+r-lpsolve
+rpy2
