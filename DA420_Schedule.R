@@ -9,9 +9,9 @@ library(lpSolve)  # linear programming package
 # ensure that two binary files are in the working directory
 # these come from running R code from R_Utilities_Appendix
 # source("R_utility_program_3.R") provides split-plotting utilities
-load("mtpa_split_plotting_utilities.Rdata")
+#load("mtpa_split_plotting_utilities.Rdata")
 # source("R_utility_program_4.R") provides wait-time ribbon plots
-load("mtpa_wait_time_ribbon_utility.Rdata")
+# load("mtpa_wait_time_ribbon_utility.Rdata")
 
 put.title.on.plots <- TRUE  # put title on wait-time ribbon plots
 # The call center data from "Anonymous Bank" in Israel were provided
@@ -136,7 +136,7 @@ for(index.day in seq(along=day.of.week.list)) {
   }
 
 # select Wednesdays in February for the queueing model
-wednesdays <- subset(call.center.data, subset = (day_of_week == "Wednesday"))
+thursday <- subset(call.center.data, subset = (day_of_week == "Thursday"))
 
 # compute arrival rate of calls as calls for hour
 # we do not use table() here because some hours could have zero calls
@@ -145,7 +145,7 @@ for(index.for.hour in 1:24) {
 # 24-hour clock has first hour coded as zero in input data file
   coded.index.for.hour <- index.for.hour - 1
   this.hour.calls <-
-    subset(wednesdays, subset = (call_hour == coded.index.for.hour))
+    subset(thursday, subset = (call_hour == coded.index.for.hour))
   if(nrow(this.hour.calls) > 0)
     calls.for.hour[index.for.hour] <- nrow(this.hour.calls)
   }
@@ -156,7 +156,7 @@ hourly.arrival.rate <- calls.for.hour/4  # four Wednesdays in February
 # service times can vary hour-by-hour due to differences
 # in service requests and individuals calling hour-by-hour
 # begin by selecting calls that receive service
-wednesdays.served <- subset(wednesdays, subset = (server != "NO_SERVER"))
+thursdays.served <- subset(thursday, subset = (server != "NO_SERVER"))
 
 hourly.mean.service.time <- numeric(24)
 served.for.hour <- numeric(24)
@@ -164,7 +164,7 @@ for(index.for.hour in 1:24) {
 # 24-hour clock has first hour coded as zero in input data file
   coded.index.for.hour <- index.for.hour - 1
   this.hour.calls <-
-    subset(wednesdays.served, subset = (call_hour == coded.index.for.hour))
+    subset(thursdays.served, subset = (call_hour == coded.index.for.hour))
   if(nrow(this.hour.calls) > 0) {
     served.for.hour[index.for.hour] <- nrow(this.hour.calls)
     hourly.mean.service.time[index.for.hour] <- mean(this.hour.calls$ser_time)
@@ -184,7 +184,7 @@ value <- hourly.served.rate
 service.data.frame <- data.frame(hour, value, type)
 arrival.service.data.frame <- rbind(arrival.data.frame, service.data.frame)
 
-pdf(file = "fig_operations_management_wednesdays_arrived_served.pdf",
+pdf(file = "fig_operations_management_thursdays_arrived_served.pdf",
   width = 11, height = 8.5)
 plotting.object <- ggplot(data = arrival.service.data.frame,
   aes(x = hour, y = value, fill = type)) +
@@ -194,7 +194,7 @@ plotting.object <- ggplot(data = arrival.service.data.frame,
     labels =
       c("00","02","04","06","08","10","12","14","16","18","20","22","24")) +
   theme(axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1)) +
-  labs(x = "Hour of Day (24-Hour Clock)", y = "Average Calls per Hour") +
+  labs(x = "Hour of Operation Thursday (24-Hour Clock)", y = "Average Calls per Hour") +
   scale_fill_manual(values = c("yellow","dark green"),
     guide = guide_legend(title = NULL))  +
   theme(legend.position = c(1,1), legend.justification = c(1,1)) +
@@ -323,9 +323,20 @@ plotting.object <- ggplot(data = plotting.data.frame,
   theme(legend.text = element_text(size=15)) +
   coord_fixed(ratio = 2/2.25)
 print(plotting.object)
+plot(plotting.object)
 dev.off()
 
+#daily_average <- subset(day.of.week.list ~thursday)
+#daily_average
+data.frame(hourly.arrival.rate)
 # Suggestion for the student:
 # Try running a sensitivity test, varying the workforce requirements
 # and noting the effect upon the optimal assignment of workers to shifts.
+# wait_time <- subset(call.center.data$q_exit – call.center.data$q_start)
 
+table(wait_time)
+
+# nrows of wait_time dataset <- subset(daybofbweek and average timeofweek
+                                     # greater than 120 wait time) and percent.
+
+# call.center.data$q_exit
